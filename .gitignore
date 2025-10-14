@@ -1,0 +1,11 @@
+# Node
+node_modules
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Env (không dùng .env trong repo)
+.env
+
+# Keys (đừng commit file PEM nào)
+*.pem
