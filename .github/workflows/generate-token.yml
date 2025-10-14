@@ -1,0 +1,43 @@
+name: Generate License Token
+
+on:
+  workflow_dispatch: {}         # run manually
+  schedule:
+    - cron: '0 * * * *'         # optional: every hour
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Generate token JSON
+        env:
+          ECDSA_PRIVATE_PEM: ${{ secrets.ECDSA_PRIVATE_PEM }}
+        run: npm run generate
+
+      - name: Prepare gh-pages branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          rm -rf out || true
+          mkdir -p out
+          mv token.json out/token.json
+          # create orphan branch and commit token
+          git checkout --orphan gh-pages || git checkout gh-pages
+          git rm -rf .
+          cp -r out/* .
+          git add token.json
+          git commit -m "Update token.json [ci skip]" || true
+          git push -f origin gh-pages
